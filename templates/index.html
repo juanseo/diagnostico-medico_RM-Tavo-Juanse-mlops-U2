@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Diagnóstico Clínico</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --border: #dde2ea;
+      --primary: #1a5fa8;
+      --primary-hover: #144d8c;
+      --text: #1c2635;
+      --muted: #5a6a7e;
+      --accent-green: #166534;
+      --accent-green-bg: #dcfce7;
+      --accent-yellow: #854d0e;
+      --accent-yellow-bg: #fef9c3;
+      --accent-orange: #9a3412;
+      --accent-orange-bg: #ffedd5;
+      --accent-red: #7f1d1d;
+      --accent-red-bg: #fee2e2;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .field {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26, 95, 168, 0.12);
+      background: #fff;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    button[type="submit"]:hover { background: var(--primary-hover); }
+    button[type="submit"]:active { transform: scale(0.99); }
+
+    #resultado {
+      margin-top: 28px;
+      padding: 20px 24px;
+      border-radius: var(--radius);
+      display: none;
+      border: 1.5px solid;
+    }
+
+    #resultado.NO-ENFERMO       { background: var(--accent-green-bg);  border-color: #86efac; color: var(--accent-green); }
+    #resultado.ENFERMEDAD-LEVE  { background: var(--accent-yellow-bg); border-color: #fde047; color: var(--accent-yellow); }
+    #resultado.ENFERMEDAD-AGUDA { background: var(--accent-orange-bg); border-color: #fdba74; color: var(--accent-orange); }
+    #resultado.ENFERMEDAD-CRONICA{ background: var(--accent-red-bg);   border-color: #fca5a5; color: var(--accent-red); }
+    #resultado.error            { background: #fef2f2; border-color: #fca5a5; color: #7f1d1d; }
+
+    #resultado .label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      opacity: 0.75;
+      margin-bottom: 4px;
+    }
+
+    #resultado .estado {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+
+    .api-section h2 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    pre {
+      background: #1c2635;
+      color: #c9d4e0;
+      padding: 16px;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+
+    footer {
+      margin-top: 32px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🩺 Sistema de Diagnóstico Clínico</h1>
+  <p>Ingrese los parámetros del paciente para obtener una predicción de estado de salud</p>
+</header>
+
+<div class="card">
+  <form id="form-diagnostico">
+    <div class="field">
+      <label for="temperatura">
+        Temperatura corporal <span class="hint">(°C · rango: 30–45)</span>
+      </label>
+      <input type="number" id="temperatura" name="temperatura"
+             step="0.1" min="30" max="45" placeholder="37.0" required />
+    </div>
+
+    <div class="field">
+      <label for="frecuencia_cardiaca">
+        Frecuencia cardíaca <span class="hint">(bpm · rango: 30–250)</span>
+      </label>
+      <input type="number" id="frecuencia_cardiaca" name="frecuencia_cardiaca"
+             step="1" min="30" max="250" placeholder="75" required />
+    </div>
+
+    <div class="field">
+      <label for="nivel_dolor">
+        Nivel de dolor <span class="hint">(0 = sin dolor · 10 = máximo)</span>
+      </label>
+      <input type="number" id="nivel_dolor" name="nivel_dolor"
+             step="1" min="0" max="10" placeholder="3" required />
+    </div>
+
+    <button type="submit">Obtener diagnóstico</button>
+  </form>
+
+  <div id="resultado">
+    <div class="label">Estado del paciente</div>
+    <div class="estado" id="estado-texto"></div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="api-section">
+    <h2>También disponible por API (JSON)</h2>
+    <pre>POST /predecir
+Content-Type: application/json
+
+{
+  "temperatura": 38.5,
+  "frecuencia_cardiaca": 110,
+  "nivel_dolor": 6
+}</pre>
+  </div>
+</div>
+
+<footer>Modelo simulado · Solo con fines educativos</footer>
+
+<script>
+  document.getElementById('form-diagnostico').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      temperatura:        parseFloat(document.getElementById('temperatura').value),
+      frecuencia_cardiaca: parseInt(document.getElementById('frecuencia_cardiaca').value),
+      nivel_dolor:        parseInt(document.getElementById('nivel_dolor').value),
+    };
+
+    try {
+      const res = await fetch('/predecir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      const div = document.getElementById('resultado');
+      const texto = document.getElementById('estado-texto');
+
+      div.className = '';
+      div.style.display = 'block';
+
+      if (data.estado) {
+        const cls = data.estado.replace(/ /g, '-');
+        div.classList.add(cls);
+        texto.textContent = data.estado;
+      } else {
+        div.classList.add('error');
+        texto.textContent = data.error || 'Error desconocido';
+      }
+    } catch (err) {
+      const div = document.getElementById('resultado');
+      div.style.display = 'block';
+      div.className = 'error';
+      document.getElementById('estado-texto').textContent = 'Error de conexión con el servidor.';
+    }
+  });
+</script>
+</body>
+</html>
