@@ -6,10 +6,11 @@ En entornos clínicos, la evaluación rápida del estado de salud de un paciente
 
 | Estado | Descripción |
 |---|---|
-| `NO ENFERMO` | El paciente presenta parámetros dentro de rangos normales |
-| `ENFERMEDAD LEVE` | Signos leves de alteración, puede requerir seguimiento |
-| `ENFERMEDAD AGUDA` | Signos claros de enfermedad, requiere atención médica |
-| `ENFERMEDAD CRÓNICA` | Signos severos y persistentes, requiere intervención urgente |
+| `NO ENFERMO` | Parámetros dentro de rangos normales |
+| `ENFERMEDAD LEVE` | Signos leves de alteración; puede requerir seguimiento |
+| `ENFERMEDAD AGUDA` | Signos claros de enfermedad; requiere atención médica |
+| `ENFERMEDAD CRÓNICA` | Signos severos y persistentes; requiere intervención urgente |
+| `ENFERMEDAD TERMINAL` | Estado crítico extremo; requiere atención inmediata de emergencia |
 
 > ⚠️ **Este sistema es una simulación educativa.** La función de predicción utiliza umbrales estáticos con fines demostrativos y **no debe usarse para diagnósticos médicos reales.** En un entorno de producción, la función sería reemplazada por un modelo de ML entrenado y validado clínicamente.
 
@@ -25,7 +26,7 @@ Este repositorio corresponde a la **solución inicial presentada en la Semana 2 
 
 ## Parámetros de entrada
 
-El médico debe ingresar **3 valores**:
+El sistema recibe **3 parámetros fisiológicos**:
 
 | Parámetro | Tipo | Rango válido | Descripción |
 |---|---|---|---|
@@ -141,6 +142,7 @@ curl -X POST http://localhost:5000/predecir \
 | 37.8 | 95 | 3 | `ENFERMEDAD LEVE` |
 | 38.5 | 110 | 6 | `ENFERMEDAD AGUDA` |
 | 40.2 | 145 | 9 | `ENFERMEDAD CRÓNICA` |
+| 41.5 | 180 | 10 | `ENFERMEDAD TERMINAL` |
 
 ---
 
