@@ -236,6 +236,14 @@ Content-Type: application/json
   "nivel_dolor": 6
 }</pre>
   </div>
+
+  <hr class="divider" />
+
+  <div class="api-section">
+    <h2>Estadísticas de Uso</h2>
+    <button type="button" id="btn-estadisticas" style="margin-bottom: 15px; background: var(--muted);">Cargar Estadísticas</button>
+    <pre id="estadisticas-resultado" style="display: none;"></pre>
+  </div>
 </div>
 
 <footer>Modelo simulado · Solo con fines educativos</footer>
@@ -280,6 +288,18 @@ Content-Type: application/json
       div.style.display = 'block';
       div.className = 'error';
       document.getElementById('estado-texto').textContent = 'Error de conexión con el servidor.';
+    }
+  });
+
+  document.getElementById('btn-estadisticas').addEventListener('click', async () => {
+    try {
+      const res = await fetch('/estadisticas');
+      const data = await res.json();
+      const div = document.getElementById('estadisticas-resultado');
+      div.textContent = JSON.stringify(data, null, 2);
+      div.style.display = 'block';
+    } catch (err) {
+      alert('Error cargando estadísticas');
     }
   });
 </script>
