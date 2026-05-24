@@ -1,6 +1,21 @@
 from flask import Flask, request, jsonify, render_template
+import datetime
+import json
 
 app = Flask(__name__)
+
+# Almacenamiento en memoria para las estadísticas
+estadisticas_globales = {
+    "conteo_por_categoria": {
+        "NO ENFERMO": 0,
+        "ENFERMEDAD LEVE": 0,
+        "ENFERMEDAD AGUDA": 0,
+        "ENFERMEDAD CRÓNICA": 0,
+        "ENFERMEDAD TERMINAL": 0
+    },
+    "ultimas_predicciones": [],
+    "fecha_ultima_prediccion": None
+}
 
 
 def predecir_enfermedad(temperatura: float, frecuencia_cardiaca: int, nivel_dolor: int) -> str:
@@ -88,19 +103,47 @@ def predecir():
 
         resultado = predecir_enfermedad(temperatura, frecuencia_cardiaca, nivel_dolor)
 
+        parametros = {
+            "temperatura": temperatura,
+            "frecuencia_cardiaca": frecuencia_cardiaca,
+            "nivel_dolor": nivel_dolor,
+        }
+
+        # Actualizar estadísticas y guardar en archivo log
+        ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if resultado in estadisticas_globales["conteo_por_categoria"]:
+            estadisticas_globales["conteo_por_categoria"][resultado] += 1
+        else:
+            estadisticas_globales["conteo_por_categoria"][resultado] = 1
+
+        registro = {
+            "fecha": ahora,
+            "resultado": resultado,
+            "parametros": parametros
+        }
+        
+        estadisticas_globales["ultimas_predicciones"].insert(0, registro)
+        estadisticas_globales["ultimas_predicciones"] = estadisticas_globales["ultimas_predicciones"][:5]
+        estadisticas_globales["fecha_ultima_prediccion"] = ahora
+
+        with open("predicciones.log", "a", encoding="utf-8") as f:
+            f.write(json.dumps(registro) + "\n")
+
         return jsonify({
             "estado": resultado,
-            "parametros": {
-                "temperatura": temperatura,
-                "frecuencia_cardiaca": frecuencia_cardiaca,
-                "nivel_dolor": nivel_dolor,
-            },
+            "parametros": parametros,
         })
 
     except KeyError as e:
         return jsonify({"error": f"Parámetro faltante: {e}"}), 400
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+
+@app.route("/estadisticas", methods=["GET"])
+def obtener_estadisticas():
+    """Endpoint para obtener las estadísticas de predicciones."""
+    return jsonify(estadisticas_globales)
 
 
 if __name__ == "__main__":
