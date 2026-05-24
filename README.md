@@ -1,8 +1,8 @@
-# 🩺 Sistema de Diagnóstico Clínico — MLOps Unidad 2
+# 🩺 Sistema de Diagnóstico Clínico — Solución Inicial (Unidad 1)
 
 ## Descripción del problema
 
-En entornos clínicos, la evaluación rápida del estado de salud de un paciente es crítica para priorizar la atención médica. Este proyecto implementa un **sistema de predicción de estado de salud** que, dado un conjunto de parámetros fisiológicos básicos, clasifica automáticamente la condición del paciente en una de cinco categorías diagnósticas:
+En entornos clínicos, la evaluación rápida del estado de salud de un paciente es crítica para priorizar la atención médica. Este proyecto implementa un **sistema de predicción de estado de salud** que, dado un conjunto de parámetros fisiológicos básicos, clasifica automáticamente la condición del paciente en una de cuatro categorías diagnósticas:
 
 | Estado | Descripción |
 |---|---|
@@ -12,18 +12,13 @@ En entornos clínicos, la evaluación rápida del estado de salud de un paciente
 | `ENFERMEDAD CRÓNICA` | Signos severos y persistentes; requiere intervención urgente |
 | `ENFERMEDAD TERMINAL` | Estado crítico extremo; requiere atención inmediata de emergencia |
 
-> ⚠️ **Sistema educativo y de simulación.** La función de predicción utiliza umbrales estáticos con fines demostrativos y **no debe usarse para diagnósticos médicos reales.** En producción, sería reemplazada por un modelo de ML entrenado y validado clínicamente.
+> ⚠️ **Este sistema es una simulación educativa.** La función de predicción utiliza umbrales estáticos con fines demostrativos y **no debe usarse para diagnósticos médicos reales.** En un entorno de producción, la función sería reemplazada por un modelo de ML entrenado y validado clínicamente.
 
 ---
 
-## Propósito del repositorio
+## Propósito
 
-Este repositorio es el entregable del proyecto de la **Unidad 2 del curso de MLOps** (Maestría en Inteligencia Artificial Aplicada — ICESI). El objetivo es demostrar buenas prácticas de MLOps aplicadas a un sistema de predicción médica:
-
-- Control de versiones y flujo de trabajo con Git (ramas, PRs, merges)
-- Contenerización del servicio con Docker
-- Integración continua y despliegue continuo (CI/CD) con GitHub Actions
-- Publicación de imágenes en GitHub Packages
+Este repositorio corresponde a la **solución inicial presentada en la Semana 2 de la Unidad 1** del curso MLOps (MIIA — ICESI). Implementa un servicio de predicción médica contenerizado con Docker, expuesto mediante una interfaz web y una API REST.
 
 **Equipo:** RM · Tavo · Juanse
 
@@ -41,44 +36,82 @@ El sistema recibe **3 parámetros fisiológicos**:
 
 ---
 
-## Estructura del repositorio
+## Lógica de predicción
 
-```
-diagnostico-medico_RM-Tavo-Juanse-mlops-U2/
-├── Dockerfile              # Definición de la imagen Docker (python:3.11-slim)
-├── requirements.txt        # Dependencias Python (Flask)
-├── app.py                  # Aplicación Flask: lógica de predicción + endpoints REST
-├── templates/
-│   └── index.html          # Interfaz web para el médico (formulario + resultados)
-└── README.md               # Este archivo
-```
+La función `predecir_enfermedad()` asigna un puntaje parcial a cada parámetro y los suma para obtener un **score total (0–9)**:
 
-### Descripción de archivos principales
+| Parámetro | Condición | Puntos |
+|---|---|---|
+| Temperatura | < 37.2°C | 0 |
+| Temperatura | 37.2–37.9°C | 1 |
+| Temperatura | 38.0–39.4°C | 2 |
+| Temperatura | ≥ 39.5°C | 3 |
+| Frec. cardíaca | < 90 bpm | 0 |
+| Frec. cardíaca | 90–109 bpm | 1 |
+| Frec. cardíaca | 110–129 bpm | 2 |
+| Frec. cardíaca | ≥ 130 bpm | 3 |
+| Nivel dolor | 0–2 | 0 |
+| Nivel dolor | 3–4 | 1 |
+| Nivel dolor | 5–7 | 2 |
+| Nivel dolor | 8–10 | 3 |
 
-- **`app.py`**: Contiene la función `predecir_enfermedad()` (sistema de puntuación por umbrales) y los endpoints Flask:
-  - `GET /` — Interfaz web
-  - `POST /predecir` — API REST para obtener diagnóstico
-  - `GET /estadisticas` — Estadísticas de predicciones realizadas
-- **`Dockerfile`**: Empaqueta la aplicación en una imagen Docker lista para producción
-- **`templates/index.html`**: UI web con código de colores según gravedad del diagnóstico
+**Clasificación por score:**
+- Score 0–1 → `NO ENFERMO`
+- Score 2–3 → `ENFERMEDAD LEVE`
+- Score 4–5 → `ENFERMEDAD AGUDA`
+- Score 6–9 → `ENFERMEDAD CRÓNICA`
 
 ---
 
-## Ejecución rápida con Docker
+## Estructura del proyecto
+
+```
+diagnostico-medico/
+├── Dockerfile          # Definición de la imagen Docker
+├── requirements.txt    # Dependencias Python (Flask)
+├── app.py              # Aplicación principal + función predecir_enfermedad()
+├── templates/
+│   └── index.html      # Interfaz web para el médico
+└── README.md           # Este archivo
+```
+
+---
+
+## Requisitos previos
+
+- [Docker](https://docs.docker.com/get-docker/) instalado en el sistema.
+- No se requiere Python ni ninguna otra dependencia local.
+
+---
+
+## Construcción y ejecución con Docker
 
 ```bash
 # Construir la imagen
 docker build -t diagnostico-medico .
 
-# Ejecutar el servicio
+# Ejecutar el servicio (disponible en http://localhost:5000)
 docker run -p 5000:5000 diagnostico-medico
-```
 
-El servicio estará disponible en: **http://localhost:5000**
+# Modo detached (segundo plano)
+docker run -d -p 5000:5000 --name diagnostico diagnostico-medico
+
+# Detener el servicio
+docker stop diagnostico
+```
 
 ---
 
-## API REST
+## Cómo obtener un diagnóstico
+
+### Opción 1 — Página web
+
+1. Abra su navegador: **http://localhost:5000**
+2. Complete los tres campos del formulario.
+3. Haga clic en **"Obtener diagnóstico"**.
+4. El resultado aparece con código de color según la gravedad.
+
+### Opción 2 — API REST
 
 **Endpoint:** `POST /predecir`  
 **Content-Type:** `application/json`
@@ -101,7 +134,7 @@ curl -X POST http://localhost:5000/predecir \
 }
 ```
 
-### Casos de prueba de referencia
+### Casos de prueba
 
 | temperatura | frecuencia_cardiaca | nivel_dolor | Estado esperado |
 |---|---|---|---|
@@ -110,17 +143,6 @@ curl -X POST http://localhost:5000/predecir \
 | 38.5 | 110 | 6 | `ENFERMEDAD AGUDA` |
 | 40.2 | 145 | 9 | `ENFERMEDAD CRÓNICA` |
 | 41.5 | 180 | 10 | `ENFERMEDAD TERMINAL` |
-
----
-
-## Flujo de ramas (MLOps U2)
-
-```
-main
-├── solucion-inicial          → Solución base de la Unidad 1
-├── añadir-enfermedad-terminal → Requisito 1: 5ª categoría diagnóstica
-└── añadir-estadisticas-predicciones → Requisito 2: sistema de estadísticas
-```
 
 ---
 
