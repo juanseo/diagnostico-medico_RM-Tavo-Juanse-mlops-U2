@@ -9,11 +9,12 @@ def predecir_enfermedad(temperatura: float, frecuencia_cardiaca: int, nivel_dolo
     basada en tres síntomas: temperatura corporal, frecuencia cardiaca
     y nivel de dolor (escala 0-10).
 
-    Retorna uno de los cuatro estados:
+    Retorna uno de los cinco estados:
         - NO ENFERMO
         - ENFERMEDAD LEVE
         - ENFERMEDAD AGUDA
         - ENFERMEDAD CRÓNICA
+        - ENFERMEDAD TERMINAL
     """
     if not (0 <= nivel_dolor <= 10):
         raise ValueError("El nivel de dolor debe estar entre 0 y 10.")
@@ -61,8 +62,10 @@ def predecir_enfermedad(temperatura: float, frecuencia_cardiaca: int, nivel_dolo
         return "ENFERMEDAD LEVE"
     elif score <= 5:
         return "ENFERMEDAD AGUDA"
-    else:
+    elif score <= 7:
         return "ENFERMEDAD CRÓNICA"
+    else:
+        return "ENFERMEDAD TERMINAL"
 
 
 @app.route("/")
