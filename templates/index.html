@@ -23,6 +23,8 @@
       --accent-orange-bg: #ffedd5;
       --accent-red: #7f1d1d;
       --accent-red-bg: #fee2e2;
+      --accent-purple: #3b0764;
+      --accent-purple-bg: #f3e8ff;
       --radius: 10px;
     }
 
@@ -127,11 +129,12 @@
       border: 1.5px solid;
     }
 
-    #resultado.NO-ENFERMO       { background: var(--accent-green-bg);  border-color: #86efac; color: var(--accent-green); }
-    #resultado.ENFERMEDAD-LEVE  { background: var(--accent-yellow-bg); border-color: #fde047; color: var(--accent-yellow); }
-    #resultado.ENFERMEDAD-AGUDA { background: var(--accent-orange-bg); border-color: #fdba74; color: var(--accent-orange); }
-    #resultado.ENFERMEDAD-CRONICA{ background: var(--accent-red-bg);   border-color: #fca5a5; color: var(--accent-red); }
-    #resultado.error            { background: #fef2f2; border-color: #fca5a5; color: #7f1d1d; }
+    #resultado.NO-ENFERMO          { background: var(--accent-green-bg);  border-color: #86efac; color: var(--accent-green); }
+    #resultado.ENFERMEDAD-LEVE     { background: var(--accent-yellow-bg); border-color: #fde047; color: var(--accent-yellow); }
+    #resultado.ENFERMEDAD-AGUDA    { background: var(--accent-orange-bg); border-color: #fdba74; color: var(--accent-orange); }
+    #resultado.ENFERMEDAD-CRONICA  { background: var(--accent-red-bg);   border-color: #fca5a5; color: var(--accent-red); }
+    #resultado.ENFERMEDAD-TERMINAL { background: var(--accent-purple-bg); border-color: #d8b4fe; color: var(--accent-purple); }
+    #resultado.error               { background: #fef2f2; border-color: #fca5a5; color: #7f1d1d; }
 
     #resultado .label {
       font-size: 0.75rem;
@@ -262,7 +265,10 @@ Content-Type: application/json
       div.style.display = 'block';
 
       if (data.estado) {
-        const cls = data.estado.replace(/ /g, '-');
+        // Normalizar: quitar tildes y reemplazar espacios por guiones para construir clase CSS
+        const cls = data.estado
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/ /g, '-');
         div.classList.add(cls);
         texto.textContent = data.estado;
       } else {
